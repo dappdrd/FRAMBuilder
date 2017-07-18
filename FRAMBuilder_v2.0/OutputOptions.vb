@@ -593,7 +593,7 @@ Here:
                 Dim RecId As String
                 RecId = cwtsubset(l)("RecoveryId").ToString
 
-                If RecId = "1998232" Then
+                If RecId = "W3307" Then
                     RecId = RecId
                 End If
 
@@ -1069,7 +1069,14 @@ Here:
                                 If FL < Limit Then
                                     FLwarn = FLwarn & "*** FL lower than limit"
                                 End If
-                                If FL < (Limit - 18) And (fram_match < 30 Or fram_match > 35) Then 'Already excluding escapement, this excludes SOF fisheries
+                                'Identify sublegal exclusions
+                                If FL < (Limit - 28) And (fram_match < 4) Then 'For SEAK (28mm = 18mm for 95% Pred Int in TL->FL conversion of size limit + 10mm measurement error)
+                                    SublegExclude = True
+                                End If
+                                If FL < (Limit - 10) And (fram_match > 3 And fram_match < 16) Then 'For Canada (10mm measurement error - no additional error for TL->FL conversion b/c Canadian size limit regs are in FL)
+                                    SublegExclude = True
+                                End If
+                                If FL < (Limit - 28) And ((fram_match > 15 And fram_match < 30) Or (fram_match > 35)) Then 'For SUS excluding SOF (28mm = 18mm for 95% Pred Int in TL->FL conversion of size limit + 10mm measurement error)
                                     SublegExclude = True
                                 End If
 
