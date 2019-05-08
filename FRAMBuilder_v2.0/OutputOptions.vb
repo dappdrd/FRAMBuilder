@@ -637,141 +637,166 @@ Here:
 
                         'Some additional rules for reassignment given one-to-many FRAM to CAS relationship
 
-                        'First Rule: Splitting Troll fisheries into Treaty/Non-treaty Components, based on fishery type 10/15
-                        If fram_match = 16 And cwtsubset(l)("CWDBFishery") = 15 Then 'If A3:4:4B troll and treaty troll code then split
-                            fram_match = 17
-                            cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                        ElseIf fram_match = 20 And cwtsubset(l)("CWDBFishery") = 15 Then 'If A2 troll and treaty troll code then split
-                            fram_match = 21
-                            cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                        End If
+                        ''First Rule OBSOLETE (Old CAS Fishery structure): Splitting Troll fisheries into Treaty/Non-treaty Components, based on fishery type 10/15
+                        'If fram_match = 16 And cwtsubset(l)("CWDBFishery") = 15 Then 'If A3:4:4B troll and treaty troll code then split
+                        '    fram_match = 17
+                        '    cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                        'ElseIf fram_match = 20 And cwtsubset(l)("CWDBFishery") = 15 Then 'If A2 troll and treaty troll code then split
+                        '    fram_match = 21
+                        '    cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                        'End If
 
-                        'Second Rule: Splitting CAS WASH COASTAL RIVERS NET (3035) into FRAM Grays, Willapa, and N WA Coast components
-                        'NOTE: Still need to split Grays Hbr into T/NT equivalents
-                        If cwtsubset(l)("Fishery") = 3035 Then
-                            If cwtsubset(l)("RecoverySite").ToString.Contains("3M21902") = True Then
-                        fram_match = 25  'Assign to Willapa, corrected to 25 from 23 5/5/2014
-                                cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                            ElseIf cwtsubset(l)("RecoverySite").ToString.Contains("3M21802") = True Then
-                        fram_match = 23 'Assign to NT Grays Harbor Net, corrected to 23 from 24 5/5/2014
-                                cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                            Else
-                                fram_match = 19 'Assign to N WA Coastal Net
-                                cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                                'Also flag it in the log file so that the 'other to N WA Coast' can be verified by user
-                                stringier = String.Join(",", cwtsubset(l).ItemArray.Select(Function(s) s.ToString).ToArray) 'Shorthand notation for writing a single row to file
-                                'CWTlog.AppendLine("Verify rec mapped to (default) N WA Coastal Net (#19),   " & stringier)
-                                'Write to DB log
-                                note = "Verify rec mapped to (default) N WA Coastal Net (#19),   " & stringier
-                                dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
-                            End If
-                        End If
+                        ''Second Rule OBSOLETE (Old CAS Fishery structure): Splitting CAS WASH COASTAL RIVERS NET (3035) into FRAM Grays, Willapa, and N WA Coast components
+                        ''NOTE: Still need to split Grays Hbr into T/NT equivalents
+                        'If cwtsubset(l)("Fishery") = 3035 Then
+                        '    If cwtsubset(l)("RecoverySite").ToString.Contains("3M21902") = True Then
+                        'fram_match = 25  'Assign to Willapa, corrected to 25 from 23 5/5/2014
+                        '        cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                        '    ElseIf cwtsubset(l)("RecoverySite").ToString.Contains("3M21802") = True Then
+                        'fram_match = 23 'Assign to NT Grays Harbor Net, corrected to 23 from 24 5/5/2014
+                        '        cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                        '    Else
+                        '        fram_match = 19 'Assign to N WA Coastal Net
+                        '        cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                        '        'Also flag it in the log file so that the 'other to N WA Coast' can be verified by user
+                        '        stringier = String.Join(",", cwtsubset(l).ItemArray.Select(Function(s) s.ToString).ToArray) 'Shorthand notation for writing a single row to file
+                        '        'CWTlog.AppendLine("Verify rec mapped to (default) N WA Coastal Net (#19),   " & stringier)
+                        '        'Write to DB log
+                        '        note = "Verify rec mapped to (default) N WA Coastal Net (#19),   " & stringier
+                        '        dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
+                        '    End If
+                        'End If
 
-                        'Third Rule: Splitting CAS GEO ST SPORT (2015) into FRAM N & S GS SPORT and JDF SPORT; ALSO, Get JOHN STR SPORT OUT OF BC OUTSIDE SPT
-                        Dim TrimmedTo As String
-                        If cwtsubset(l)("Fishery") = 2015 Then
-                            'TrimmedTo = Microsoft.VisualBasic.Right(Microsoft.VisualBasic.Left(cwtsubset(l)("RecoverySite").ToString, 9), 3)
-                            TrimmedTo = Microsoft.VisualBasic.Right(Microsoft.VisualBasic.Left(cwtsubset(l)("RecoverySite").ToString, 9), 3) 'NEW way, due to new Canadian Location Codes, June 2015
-                            If TrimmedTo = "013" Or TrimmedTo = "014" Or TrimmedTo = "015" Or TrimmedTo = "016" Then 'Canadian Stat Areas 13-16
-                                fram_match = 13  'Assign to North Georgia Strait Sport
-                                cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                            ElseIf (TrimmedTo = "017 " Or TrimmedTo = "018" Or TrimmedTo = "19A" Or TrimmedTo = "028" Or TrimmedTo = "029" Or cwtsubset(l)("RecoverySite").ToString.Contains("19A") Or TrimmedTo.Contains("17")) Then 'Canadian Stat Areas Canadian Stat Areas 17-18, 19A, 28-29
-                                fram_match = 14  'Assign to South Georgia Strait Sport
-                                cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                            ElseIf TrimmedTo = "19B" Or TrimmedTo = "020" Or cwtsubset(l)("RecoverySite").ToString.Contains("19B") Then
-                                fram_match = 15 'Assign to BC JDF Sport
-                                cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                            Else
-                                'Leave it in the default original mapping and write note to log to verify
-                                stringier = String.Join(",", cwtsubset(l).ItemArray.Select(Function(s) s.ToString).ToArray) 'Shorthand notation for writing a single row to file
-                                'CWTlog.AppendLine("Verify rec mapped to (default) N Georgia St Spt (#15),   " & stringier)
-                                note = "Verify rec mapped to (default) N Georgia St Spt (#15),   " & stringier
-                                dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
-                            End If
-                        ElseIf cwtsubset(l)("Fishery") = 2016 Then 'If BC Outside Sport in Area 12, Make it into N GS SPORT
-                            TrimmedTo = Microsoft.VisualBasic.Right(Microsoft.VisualBasic.Left(cwtsubset(l)("RecoverySite").ToString, 9), 3)
-                            If TrimmedTo = "12 " Then
-                                fram_match = 13  'Assign to North Georgia Strait Sport
-                                cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                            End If
-                        End If
+                        ''Third Rule OBSOLETE (Old CAS Fishery structure): Splitting CAS GEO ST SPORT (2015) into FRAM N & S GS SPORT and JDF SPORT; ALSO, Get JOHN STR SPORT OUT OF BC OUTSIDE SPT
+                        'Dim TrimmedTo As String
+                        'If cwtsubset(l)("Fishery") = 2015 Then
+                        '    'TrimmedTo = Microsoft.VisualBasic.Right(Microsoft.VisualBasic.Left(cwtsubset(l)("RecoverySite").ToString, 9), 3)
+                        '    TrimmedTo = Microsoft.VisualBasic.Right(Microsoft.VisualBasic.Left(cwtsubset(l)("RecoverySite").ToString, 9), 3) 'NEW way, due to new Canadian Location Codes, June 2015
+                        '    If TrimmedTo = "013" Or TrimmedTo = "014" Or TrimmedTo = "015" Or TrimmedTo = "016" Then 'Canadian Stat Areas 13-16
+                        '        fram_match = 13  'Assign to North Georgia Strait Sport
+                        '        cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                        '    ElseIf (TrimmedTo = "017 " Or TrimmedTo = "018" Or TrimmedTo = "19A" Or TrimmedTo = "028" Or TrimmedTo = "029" Or cwtsubset(l)("RecoverySite").ToString.Contains("19A") Or TrimmedTo.Contains("17")) Then 'Canadian Stat Areas Canadian Stat Areas 17-18, 19A, 28-29
+                        '        fram_match = 14  'Assign to South Georgia Strait Sport
+                        '        cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                        '    ElseIf TrimmedTo = "19B" Or TrimmedTo = "020" Or cwtsubset(l)("RecoverySite").ToString.Contains("19B") Then
+                        '        fram_match = 15 'Assign to BC JDF Sport
+                        '        cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                        '    Else
+                        '        'Leave it in the default original mapping and write note to log to verify
+                        '        stringier = String.Join(",", cwtsubset(l).ItemArray.Select(Function(s) s.ToString).ToArray) 'Shorthand notation for writing a single row to file
+                        '        'CWTlog.AppendLine("Verify rec mapped to (default) N Georgia St Spt (#15),   " & stringier)
+                        '        note = "Verify rec mapped to (default) N Georgia St Spt (#15),   " & stringier
+                        '        dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
+                        '    End If
+                        'ElseIf cwtsubset(l)("Fishery") = 2016 Then 'If BC Outside Sport in Area 12, Make it into N GS SPORT
+                        '    TrimmedTo = Microsoft.VisualBasic.Right(Microsoft.VisualBasic.Left(cwtsubset(l)("RecoverySite").ToString, 9), 3)
+                        '    If TrimmedTo = "12 " Then
+                        '        fram_match = 13  'Assign to North Georgia Strait Sport
+                        '        cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                        '    End If
+                        'End If
 
-                        'Fourth Rule: Splitting CAS WA SPS NET (3013) into FRAM Area 13A (T+NT) and SPS Net (13, 13D-K) Fisheries
+                        'First Rule: Splitting CAS WA PS AREAS 10-11-13 NET (2315) and TERMINAL NET (2316) into FRAM Area 10A, 10E, 10/11 (T+NT), 13A, and SPS Net (13, 13D-K) Fisheries
                         'Also deals with Chambers 13C Catch by shifting it to FW Net (consistent with TAMM treatment of fishery and actual
                         'Fishery layout (i.e., 13C is east of RR trestle at mouth of stream, anyone caught there is probably staying there, thus a stray)
                         'NOTE: Still need to split all fisheries into T/NT equivalents
-                        If cwtsubset(l)("Fishery") = 3013 Then
-                            If cwtsubset(l)("RecoverySite").ToString.Contains("C") = True Then
-                                fram_match = 73  'Assign 13C to Freshwater Net
-                                cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                            ElseIf cwtsubset(l)("RecoverySite").ToString.Contains("A") = True Then
-                                fram_match = 70 'Assign All 13A Catch to NT (will split via other means later)
-                                cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                                'NOTE: Still need to split into T/NT equivalents
+                        If cwtsubset(l)("Fishery") = 2315 Or cwtsubset(l)("Fishery") = 2316 Then
+                            If cwtsubset(l)("RecoverySite").ToString.Contains("13") = True Then
+                                If cwtsubset(l)("RecoverySite").ToString.Contains("C") = True Then
+                                    fram_match = 73  'Assign 13C to Freshwater Net
+                                    cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                                ElseIf cwtsubset(l)("RecoverySite").ToString.Contains("A") = True Then
+                                    fram_match = 70 'Assign All 13A Catch to NT (will split via other means later)
+                                    cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                                    'NOTE: Still need to split into T/NT equivalents  
+                                Else
+                                    fram_match = 68 'Assign everything else NT SPS Net (i.e., Gen 13, 13B, 13D-K)
+                                    cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                                    'Also if it's not 13D or 13F (only locs fished in 2007-11 FY), flag it in the log file so that the 'SPS Net' assignment can be inspected by user
+                                    If cwtsubset(l)("RecoverySite").ToString.Contains("D") = False Or cwtsubset(l)("RecoverySite").ToString.Contains("F") = False Then
+                                        cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                                        stringier = String.Join(",", cwtsubset(l).ItemArray.Select(Function(s) s.ToString).ToArray) 'Shorthand notation for writing a single row to file
+                                        'CWTlog.AppendLine("Verify rec mapped to (default) SPS Net (#68),   " & stringier)
+                                        note = "Verify rec mapped to (default) SPS Net (#68),   " & stringier
+                                        dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
+                                    End If
+                                End If
                             Else
-                                fram_match = 68 'Assign everything else NT SPS Net (i.e., Gen 13, 13B, 13D-K)
-                                cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                                'Also if it's not 13D or 13F (only locs fished in 2007-11 FY), flag it in the log file so that the 'SPS Net' assignment can be inspected by user
-                                If cwtsubset(l)("RecoverySite").ToString.Contains("D") = False Or cwtsubset(l)("RecoverySite").ToString.Contains("F") = False Then
+                                If cwtsubset(l)("RecoverySite").ToString.Contains("10  A") = True Then
+                                    fram_match = 61  'Assign To Treaty 10A
+                                    cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                                ElseIf cwtsubset(l)("RecoverySite").ToString.Contains("10  E") = True Then
+                                    fram_match = 63 'Assign To Treaty 10E
+                                    cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                                Else
+                                    fram_match = 58 'Assign everything else NT 10:11 Net, but also write to log for verification
                                     cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
                                     stringier = String.Join(",", cwtsubset(l).ItemArray.Select(Function(s) s.ToString).ToArray) 'Shorthand notation for writing a single row to file
-                                    'CWTlog.AppendLine("Verify rec mapped to (default) SPS Net (#68),   " & stringier)
-                                    note = "Verify rec mapped to (default) SPS Net (#68),   " & stringier
+                                    'CWTlog.AppendLine("Verify rec mapped to (default) 10:11 Net (#58),   " & stringier)
+                                    note = "Verify rec mapped to (default) 10:11 Net (#58),   " & stringier
                                     dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
                                 End If
                             End If
                         End If
 
-                        'Fifth Rule: Splitting CAS WA PS AREAS 10 AND 11 NET Into FRAM 10A Tr, 10E Tr, and 10:11 Tr/NT Net fisheries
-                        'NOTE: Still need to split 10:11 Net into Tr/NT equivalents
-                        If cwtsubset(l)("Fishery") = 3012 Then
-                            If cwtsubset(l)("RecoverySite").ToString.Contains("10  A") = True Then
-                                fram_match = 61  'Assign To Treaty 10A
-                                cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                            ElseIf cwtsubset(l)("RecoverySite").ToString.Contains("10  E") = True Then
-                                fram_match = 63 'Assign To Treaty 10E
-                                cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                                'NOTE: Still need to split into T/NT equivalents
-                            Else
-                                fram_match = 58 'Assign everything else NT 10:11 Net, but also write to log for verification
-                                cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                                stringier = String.Join(",", cwtsubset(l).ItemArray.Select(Function(s) s.ToString).ToArray) 'Shorthand notation for writing a single row to file
-                                'CWTlog.AppendLine("Verify rec mapped to (default) 10:11 Net (#58),   " & stringier)
-                                note = "Verify rec mapped to (default) 10:11 Net (#58),   " & stringier
-                                dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
-                            End If
-                        End If
+                        ''Fifth Rule OBSOLETE (Old CAS Fishery structure): Splitting CAS WA PS AREAS 10 AND 11 NET Into FRAM 10A Tr, 10E Tr, and 10:11 Tr/NT Net fisheries
+                        ''NOTE: Still need to split 10:11 Net into Tr/NT equivalents
+                        'If cwtsubset(l)("Fishery") = 3012 Then
+                        '    If cwtsubset(l)("RecoverySite").ToString.Contains("10  A") = True Then
+                        '        fram_match = 61  'Assign To Treaty 10A
+                        '        cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                        '    ElseIf cwtsubset(l)("RecoverySite").ToString.Contains("10  E") = True Then
+                        '        fram_match = 63 'Assign To Treaty 10E
+                        '        cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                        '        'NOTE: Still need to split into T/NT equivalents
+                        '    Else
+                        '        fram_match = 58 'Assign everything else NT 10:11 Net, but also write to log for verification
+                        '        cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                        '        stringier = String.Join(",", cwtsubset(l).ItemArray.Select(Function(s) s.ToString).ToArray) 'Shorthand notation for writing a single row to file
+                        '        'CWTlog.AppendLine("Verify rec mapped to (default) 10:11 Net (#58),   " & stringier)
+                        '        note = "Verify rec mapped to (default) 10:11 Net (#58),   " & stringier
+                        '        dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
+                        '    End If
+                        'End If
 
-                        'Sixth Rule: Dealing with 10A (EBay) and 10E (Stinklair) vs. Area 10 during summer period
+                        'Second Rule: Spliting CAS SPS A10_11_13 SPORT (3311) and TERMINAL SPORT (3315) into FRAM A10, 11, 13, 10A, and 10E sport
                         'Note: this rule has possible imperfections due to 10A, 10E, 10 miscoding on RMIS, although
                         'the fraction of erroneous recoveries is likely minimal.
-                        If cwtsubset(l)("Fishery") = 3025 And (Month(cwtsubset(l)("RecoveryDate")) >= 7 And Month(cwtsubset(l)("RecoveryDate")) <= 9) Then
-                            If cwtsubset(l)("RecoverySite").ToString.Contains("872155" Or "872585") = True Then
-                                fram_match = 60  'Assign To Elliott Bay
+                        If cwtsubset(l)("Fishery") = 3311 Or cwtsubset(l)("Fishery") = 3315 Then
+                            If cwtsubset(l)("RecoverySite").ToString.Contains("3M11413") = True Then
+                                fram_match = 67  'Assign To Area 13 sport
                                 cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
-                            ElseIf cwtsubset(l)("RecoverySite").ToString.Contains("872477" Or "872286" Or "872408") = True Then
-                                fram_match = 62 'Assign To Sinclair Inlet
+                            ElseIf cwtsubset(l)("RecoverySite").ToString.Contains("3M11411") = True Then
+                                fram_match = 57  'Assign To Area 11 sport
                                 cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                            ElseIf (Month(cwtsubset(l)("RecoveryDate")) >= 7 And Month(cwtsubset(l)("RecoveryDate")) <= 9) Then
+                                If cwtsubset(l)("RecoverySite").ToString.Contains("872155" Or "872585") = True Then
+                                    fram_match = 60  'Assign To Elliott Bay
+                                    cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                                ElseIf cwtsubset(l)("RecoverySite").ToString.Contains("872477" Or "872286" Or "872408") = True Then
+                                    fram_match = 62 'Assign To Sinclair Inlet
+                                    cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
+                                End If
                             Else
                                 fram_match = 56 'Assign everything else General Area 10
                                 cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
                             End If
                         End If
 
-                        'Seventh Rule: Moving 8D Sport out of 8-1/8-2 Sport during Tulalip Bay management
-                        If cwtsubset(l)("Fishery") = 3023 And (Month(cwtsubset(l)("RecoveryDate")) >= 6 And Month(cwtsubset(l)("RecoveryDate")) <= 9) Then
+                        'Third Rule: Moving 8D Sport out of 8-1/8-2 Sport during Tulalip Bay management
+                        If cwtsubset(l)("Fishery") = 3308 And (Month(cwtsubset(l)("RecoveryDate")) >= 6 And Month(cwtsubset(l)("RecoveryDate")) <= 9) Then
                             fram_match = 48 'Move recoveries into 8-D if they were an 8-2 Rec during months of Jun-Sept (8-2 closed, 8D open)
                             cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
                             'But also write to log for inspection
                             stringier = String.Join(",", cwtsubset(l).ItemArray.Select(Function(s) s.ToString).ToArray) 'Shorthand notation for writing a single row to file
                             'CWTlog.AppendLine("Verify rec mapped to 8D Sport (#48) from 8-1/8-2 Sport,   " & stringier)
-                                note = "Verify rec mapped to 8D Sport (#48) from 8-1/8-2 Sport,   " & stringier
-                                dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
+                            note = "Verify rec mapped to 8D Sport (#48) from 8-1/8-2 Sport,   " & stringier
+                            dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
                         End If
 
-                        'Eighth Rule: Moving 8D Net Out of 8A Net
+                        'Fourth Rule: Moving 8D Net Out of 8A Net
                         'NOTE: Still need to split 8A/8D Net into Tr/NT equivalents
-                        If cwtsubset(l)("Fishery") = 3011 And cwtsubset(l)("RecoverySite").ToString.Contains("8  D") = True Then
+                        If (cwtsubset(l)("Fishery") = 2313 Or cwtsubset(l)("Fishery") = 2314) And cwtsubset(l)("RecoverySite").ToString.Contains("8  D") = True Then
                             fram_match = 51 'Move Recoveries to NT 8D and deal with T/NT splitting later
                             cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
                             'But also write to log for inspection
@@ -781,59 +806,59 @@ Here:
                                 dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
                         End If
 
-                        'Ninth Rule: Separating KMZ From California Troll so that it can be merged with OR KMZ Troll into single FRAM KMZ Troll Fishery
-                        If cwtsubset(l)("Fishery") = 3034 And cwtsubset(l)("RecoverySite").ToString.Contains("OBHJ") = True Then
+                        'Fifth Rule: Separating KMZ From California Troll so that it can be merged with OR KMZ Troll into single FRAM KMZ Troll Fishery
+                        If cwtsubset(l)("Fishery") = 1314 And cwtsubset(l)("RecoverySite").ToString.Contains("OBHJ") = True Then
                             'At present the only troll recovery code discernable as within KMZ is Oregon Border-Humboldt Jetty, eval as needed
                             fram_match = 32 'Move Recoveries to KMZ Troll, leave others in Cali Sport
                             cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
                             'But also write to log for inspection
                             stringier = String.Join(",", cwtsubset(l).ItemArray.Select(Function(s) s.ToString).ToArray) 'Shorthand notation for writing a single row to file
                             'CWTlog.AppendLine("Verify rec mapped to KMZ Troll (#32) from CA Troll,   " & stringier)
-                                note = "Verify rec mapped to KMZ Troll (#32) from CA Troll,   " & stringier
-                                dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
+                            note = "Verify rec mapped to KMZ Troll (#32) from CA Troll,   " & stringier
+                            dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
                         End If
 
-                        'Tenth Rule: Separating KMZ From California Sport so that it can be merged with OR KMZ Sport into single FRAM KMZ Sport Fishery
-                        If cwtsubset(l)("Fishery") = 3043 And cwtsubset(l)("RecoverySite").ToString.Contains("BGCB") = True Then
+                        'Sixth Rule: Separating KMZ From California Sport so that it can be merged with OR KMZ Sport into single FRAM KMZ Sport Fishery
+                        If cwtsubset(l)("Fishery") = 3331 And cwtsubset(l)("RecoverySite").ToString.Contains("BGCB") = True Then
                             'At present the only sport recovery code discernable is Big Lagoon to Centerville Beach, eval as needed
                             fram_match = 33 'Move Recoveries to KMZ Sport, leave others in Cali Sport
                             cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
                             'But also write to log for inspection
                             stringier = String.Join(",", cwtsubset(l).ItemArray.Select(Function(s) s.ToString).ToArray) 'Shorthand notation for writing a single row to file
                             'CWTlog.AppendLine("Verify rec mapped to KMZ Sport (#33) from CA Sport,   " & stringier)
-                                note = "Verify rec mapped to KMZ Sport (#33) from CA Sport,   " & stringier
-                                dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
+                            note = "Verify rec mapped to KMZ Sport (#33) from CA Sport,   " & stringier
+                            dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
                         End If
 
-                        'Eleventh Rule: Moving 12H (Hoodsport) to FW Net, consistent with the TAMM treatment of the fishery
-                        If cwtsubset(l)("Fishery") = 3014 And cwtsubset(l)("RecoverySite").ToString.Contains("12  H") = True Then
+                        'Seventh Rule: Moving 12H (Hoodsport) to FW Net, consistent with the TAMM treatment of the fishery
+                        If (cwtsubset(l)("Fishery") = 2318 Or cwtsubset(l)("Fishery") = 2319) And cwtsubset(l)("RecoverySite").ToString.Contains("12  H") = True Then
                             'At present the only sport recovery code discernable is Big Lagoon to Centerville Beach, eval as needed
                             cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
                             fram_match = 73 'Move Recoveries to KMZ Sport, leave others in Cali Sport
                             'But also write to log for inspection
                             stringier = String.Join(",", cwtsubset(l).ItemArray.Select(Function(s) s.ToString).ToArray) 'Shorthand notation for writing a single row to file
                             'CWTlog.AppendLine("Verify rec mapped to Freshwater Net (#73) from 12 H Net,   " & stringier)
-                                note = "Verify rec mapped to Freshwater Net (#73) from 12 H Net,   " & stringier
-                                dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
+                            note = "Verify rec mapped to Freshwater Net (#73) from 12 H Net,   " & stringier
+                            dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
                         End If
 
-                        'Twelfth Rule: moving incorrectly mapped Area 1 Troll recoveries into the correct fishery
-                        If (cwtsubset(l)("Fishery") = 3030 And (cwtsubset(l)("RecoverySite").ToString = "5M2220202O0202  10" Or cwtsubset(l)("RecoverySite").ToString = "5M2221002O1002  10")) Then
+                        'Eighth Rule: moving incorrectly mapped Area 1 Troll recoveries into the correct fishery
+                        If (cwtsubset(l)("Fishery") = 1309 And (cwtsubset(l)("RecoverySite").ToString = "5M2220202O0202  10" Or cwtsubset(l)("RecoverySite").ToString = "5M2221002O1002  10")) Then
                             fram_match = 26 'Move Recoveries to KMZ Sport, leave others in Cali Sport
                             cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
                             stringier = String.Join(",", cwtsubset(l).ItemArray.Select(Function(s) s.ToString).ToArray) 'Shorthand notation for writing a single row to file
                             'CWTlog.AppendLine("Verify rec mapped to Freshwater Net (#73) from 12 H Net,   " & stringier)
-                                note = "OR Area 3 Troll Rec moved to Area 1 Troll,   " & stringier
-                                dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
+                            note = "OR Area 3 Troll Rec moved to Area 1 Troll,   " & stringier
+                            dtProcessOut.Tables(0).Rows.Add(runID, stk, code, RecId, note)
                         End If
 
-                        'Thirteenth Rule: Separating Bellingham Bay Net Fishery Recoveries into their respective Treaty/Non-treaty components
+                        'Ninth Rule: Separating Bellingham Bay Net Fishery Recoveries into their respective Treaty/Non-treaty components
                         'Note that this requires some pre-processing of data and manual manipulation of recoveries within the CAS database in order for it to work
                         'Specifically, you need to (1) add a field called 'Tr_NT' to the 'CWDBRecovery' table, if it hasn't been done already
                         '(2) populate it with 'Tr' and 'NT' values based on the Gear Codes which aren't in CAS (you must pair with raw RMIS recovery data)
                         'and (3) duplicate within the database any 'mixed' (indistinguishable Tr and NT recs) recoveries and 
                         'and assign a fraction to each NT/Tr fisher types (e.g., using catch proportions for that run year). It's a kludge, but gets it done
-                        If (cwtsubset(l)("Fishery") = 3008) Then
+                        If (cwtsubset(l)("Fishery") = 2307) Then
                             If cwtsubset(l)("Tr_NT").ToString = "Tr" Then
                                 fram_match = 40 'Assign to Treaty Bham Bay
                                 cwtsubset(l)("finalFmap") = fram_match 'Rewire accordingly
